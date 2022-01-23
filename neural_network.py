@@ -87,4 +87,20 @@ class NeuralNetwork:
             return sum_ / array.shape[0]
         else:
             raise Exception('Unknown metric')
+            
+    def statistics(self, test):
+        from itertools import chain
+        
+        diff = self.get_diff(test)
+        columns = [['min_' + emotion, 'max_' + emotion, 'mean_abs_' + emotion]
+                   for emotion in diff.columns]
+        columns = list(chain.from_iterable(columns))
+        statistics_df = pd.DataFrame(columns=columns)
+        entry_dict = {}
+        for emotion in diff.columns:
+            entry_dict['min_' + emotion] = np.min(diff[emotion])
+            entry_dict['max_' + emotion] = np.max(diff[emotion])
+            entry_dict['mean_abs_' + emotion] = np.mean(np.absolute(diff[emotion]))
+        statistics_df = statistics_df.append(entry_dict, ignore_index = True)
+        return statistics_df
 
