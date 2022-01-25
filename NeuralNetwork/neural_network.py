@@ -30,8 +30,8 @@ class NeuralNetwork:
             return self.df_y[from_:to]
     
     def predict(self, test=None):
-    	if self.model is None:
-    	    raise Exception('You can use predict method only with model.')
+        if self.model is None:
+            raise Exception('You can use predict method only with model.')
     
         if test is None:
             df_x = self.get_df_xy(self.from_, self.to)
