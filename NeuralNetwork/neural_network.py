@@ -1,5 +1,5 @@
 class NeuralNetwork:
-    def __init__(self, x, y, model):
+    def __init__(self, x, y, model=None):
         self.df_x = x
         for field in self.df_x.columns:
             self.df_x[field] = self.df_x[field].apply(lambda entry: float(entry))
@@ -30,6 +30,9 @@ class NeuralNetwork:
             return self.df_y[from_:to]
     
     def predict(self, test=None):
+    	if self.model is None:
+    	    raise Exception('You can use predict method only with model.')
+    
         if test is None:
             df_x = self.get_df_xy(self.from_, self.to)
             df_res = pd.DataFrame(self.model.predict(df_x.values))
