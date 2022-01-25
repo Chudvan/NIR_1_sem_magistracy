@@ -85,6 +85,10 @@ class NeuralNetwork:
             for vector in array:
                 sum_ += np.linalg.norm(vector)
             return sum_ / array.shape[0]
+        elif type_ == 'stat':
+            stat = self.statistics(test)
+            vector = np.absolute(stat.values)
+            return vector.mean()
         else:
             raise Exception('Unknown metric')
             
