@@ -1,3 +1,9 @@
+import pandas as pd
+import re
+import numpy as np
+from itertools import chain
+
+
 class NeuralNetwork:
     def __init__(self, x, y, model=None):
         self.df_x = x
@@ -62,9 +68,7 @@ class NeuralNetwork:
         diff_df.index = predict_df.index
         return diff_df
     
-    def create_add_to_index(self, csv_file):
-        import re
-        
+    def create_add_to_index(self, csv_file):   
         res = []
         without_participant = re.split('Participant \d*', csv_file)[1]
         fragments = re.split('Analysis ', without_participant)
@@ -72,9 +76,7 @@ class NeuralNetwork:
         res.append(re.split('_video_', fragments[1])[0])
         return ''.join(res)
     
-    def model_metric(self, test, type_='mean'):
-        import numpy as np
-        
+    def model_metric(self, test, type_='mean'):        
         if type_ == 'mean':
             array = np.absolute(self.get_diff(test).values)
             coefs = np.array(range(array.shape[1] + 1))[1:]
@@ -95,9 +97,7 @@ class NeuralNetwork:
         else:
             raise Exception('Unknown metric')
             
-    def statistics(self, test):
-        from itertools import chain
-        
+    def statistics(self, test):        
         diff = self.get_diff(test)
         columns = [['min_' + emotion, 'max_' + emotion, 'mean_abs_' + emotion]
                    for emotion in diff.columns]
