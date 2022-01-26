@@ -126,13 +126,6 @@ class NeuralNetwork:
             index_set = index_set.union(set(diff_cur_emotion.index))
         index_df = pd.DataFrame({'Index_': list(index_set)})
         index_df.index = index_df['Index_']
-            
-#         for emotion in seven_fields:
-#             diff_cur_emotion = diff[np.absolute(diff[emotion]) > 0.1]
-#             diff_cur_emotion['Index_'] = diff_cur_emotion.index
-#             index_df = pd.concat([index_df, diff_cur_emotion], axis=0)
-#         index_df = pd.DataFrame(pd.unique(index_df['Index_']))
-#         index_df.index = index_df[0]
         
         train_df = pd.merge(test, index_df, left_index=True, right_index=True)[seven_fields + pa_fields]
         train_df.insert(0, 'Index_', train_df.index)
