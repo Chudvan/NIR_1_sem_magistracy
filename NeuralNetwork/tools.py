@@ -27,7 +27,7 @@ create table {name_db} (
     connection.commit()
     return connection
 
-def groupby(df, by=None):
+def groupby(df, by=None, other=False):
     pa_fields =     [
     'Valence',
     'Arousal'
@@ -60,6 +60,8 @@ def groupby(df, by=None):
             group[1][field] = round(group[1][field].mean(), 2)
             
     df_train = pd.DataFrame()
+    if other:
+        df_other = pd.DataFrame()
     
     for group in groupby_fields_sorted:
         len_group = len(group[1])
@@ -71,6 +73,10 @@ def groupby(df, by=None):
                 i = random.randint(0, len_group - 1)
             rand_set.add(i)
             df_train = pd.concat([df_train, group[1].iloc[i:i + 1]], axis=0)
-    
+        if other:
+            all_i_without_rand_set = set(range(len_group)) - rand_set
+            df_other = pd.concat([df_other, group[1].iloc[list(all_i_without_rand_set)]], axis=0)
+    if other:
+        return df_train, df_other
     return df_train
 
