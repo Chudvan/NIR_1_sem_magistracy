@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import numpy as np
 from itertools import chain
+from NeuralNetwork.tools import groupby
 
 
 class NeuralNetwork:
