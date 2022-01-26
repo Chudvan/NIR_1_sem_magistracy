@@ -16,6 +16,14 @@ class NeuralNetwork:
         self.model = model
         self.from_ = 0
         self.to = 1
+        
+    @property
+    def pa_fields(self):
+        return list(self.df_x.columns)
+    
+    @property
+    def seven_fields(self):
+        return list(self.df_y.columns)
     
     def get_df_xy(self, from_ = None, to = None, xy = None):
         if xy is None:
@@ -112,22 +120,35 @@ class NeuralNetwork:
         statistics_df = statistics_df.append(entry_dict, ignore_index = True)
         return statistics_df
 
-    def create_train_df_from_diff(self, test):
-        pa_fields = list(self.df_x.columns)
-        seven_fields = list(self.df_y.columns)
-        
+    def create_train_df_from_diff(self, test):        
         index_df = pd.DataFrame(columns=['Index_'])
         
         diff = self.get_diff(test)
         
         index_set = set()
-        for emotion in seven_fields:
+        for emotion in self.seven_fields:
             diff_cur_emotion = diff[np.absolute(diff[emotion]) > 0.1]
             index_set = index_set.union(set(diff_cur_emotion.index))
         index_df = pd.DataFrame({'Index_': list(index_set)})
         index_df.index = index_df['Index_']
         
-        train_df = pd.merge(test, index_df, left_index=True, right_index=True)[seven_fields + pa_fields]
+        fields = self.seven_fields + self.pa_fields
+        train_df = pd.merge(test, index_df, left_index=True, right_index=True)[fields]
         train_df.insert(0, 'Index_', train_df.index)
         return groupby(train_df)
+
+    def fit(self, train_df, epochs=10, batch_size=30):
+        pa_vector = train_df[self.pa_fields]
+        x = []
+        for i in range(len(pa_vector)):
+            x.append((pa_vector['Valence'][i], pa_vector['Arousal'][i])) 
+        x = np.array(x)
+
+        seven_vector = train_df[self.seven_fields]
+        y = []
+        for i in range(len(pa_vector)):
+            y.append(tuple(seven_vector[col][i] for col in seven_vector.columns)) 
+        y = np.array(y)
+        
+        self.model.fit(x=x, y=y, epochs=epochs, batch_size=batch_size)
 
