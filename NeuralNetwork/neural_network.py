@@ -3,6 +3,8 @@ import re
 import numpy as np
 from itertools import chain
 from NeuralNetwork.tools import groupby
+from sklearn.model_selection import train_test_split
+import random
 
 
 class NeuralNetwork:
@@ -151,4 +153,25 @@ class NeuralNetwork:
         y = np.array(y)
         
         self.model.fit(x=x, y=y, epochs=epochs, batch_size=batch_size)
+
+    def train_test_split(self, full_df_list, percent_df_list, test_size=0.4, random_state=None):
+        if random_state is None:
+            random_state = random.randint(0, 100)
+        
+        percent_df = percent_df_list[0]
+        for df_ in percent_df_list[1:]:
+            percent_df = pd.concat([percent_df, df_], axis=0)
+        X_train, X_test, y_train, y_test = train_test_split(percent_df[self.pa_fields], 
+                                                            percent_df[self.seven_fields], 
+                                                            test_size=test_size, 
+                                                            random_state=random_state)
+
+        df_train = pd.concat([y_train, X_train], axis=1)
+        df_test = pd.concat([y_test, X_test], axis=1)
+        
+        for df_ in full_df_list:
+            df_train = pd.concat([df_train, df_], axis=0)
+        df_train.sample(frac=1)
+        
+        return df_train, df_test
 
