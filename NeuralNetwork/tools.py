@@ -80,3 +80,12 @@ def groupby(df, by=None, other=False):
         return df_train, df_other
     return df_train
 
+def apply_float(df_, columns):
+    for field in columns:
+        df_[field] = df_[field].apply(lambda el: float(el))
+        
+def make_valid_df(df_, columns=None):
+    if columns is not None:
+        apply_float(df_, columns)
+    df_.index = df_['Index_']
+
