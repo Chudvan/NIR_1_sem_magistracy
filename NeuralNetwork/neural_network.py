@@ -122,14 +122,14 @@ class NeuralNetwork:
         statistics_df = statistics_df.append(entry_dict, ignore_index = True)
         return statistics_df
 
-    def create_train_df_from_diff(self, test):        
+    def create_train_df_from_diff(self, test, error=0.1):        
         index_df = pd.DataFrame(columns=['Index_'])
         
         diff = self.get_diff(test)
         
         index_set = set()
         for emotion in self.seven_fields:
-            diff_cur_emotion = diff[np.absolute(diff[emotion]) > 0.1]
+            diff_cur_emotion = diff[np.absolute(diff[emotion]) > error]
             index_set = index_set.union(set(diff_cur_emotion.index))
         index_df = pd.DataFrame({'Index_': list(index_set)})
         index_df.index = index_df['Index_']
