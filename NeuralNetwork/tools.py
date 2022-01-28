@@ -88,4 +88,22 @@ def make_valid_df(df_, columns=None):
     if columns is not None:
         apply_float(df_, columns)
     df_.index = df_['Index_']
+    
+def refitting(models, test, df_metrics, df_train=None, v=1, 
+              layer='first', epochs=20, batch_size=20, type_='diff'):
+    for nn_tuple in models:
+        nn = nn_tuple[2]
+        print('refit', nn_tuple[0])
+        if type_ == 'diff':
+            df_train = nn.create_train_df_from_diff(test)
+        elif type_ == 'split' and df_train is not None:
+            pass
+        else:
+            raise Exception('Unknown refitting type.')
+        nn.fit(df_train, epochs=epochs, batch_size=batch_size)
+        entry_dict = {'model': nn_tuple[1] + f'_{v}', 'layer': layer, 'N': nn_tuple[1]}
+        entry_dict.update({metric: nn.model_metric(test, metric) for metric in metrics})
+        df_metrics = df_metrics.append(entry_dict, ignore_index = True)
+        print(entry_dict)
+    return df_metrics
 
