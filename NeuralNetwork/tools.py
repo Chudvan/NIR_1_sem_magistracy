@@ -58,7 +58,7 @@ def groupby(df, by=None, prediction=2, other=False):
     groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))
     for group in groupby_fields_sorted:
         for field in seven_fields:
-            group[1][field] = round(group[1][field].mean(), 2)
+            group[1][field] = round(group[1][field].mean(), prediction)
             
     df_train = pd.DataFrame()
     if other:
