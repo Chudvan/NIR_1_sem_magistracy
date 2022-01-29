@@ -2,6 +2,7 @@ import sqlite3
 import pandas as pd
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 
 def save_to_db(db_path, name_db, df):
@@ -27,7 +28,7 @@ create table {name_db} (
     connection.commit()
     return connection
 
-def groupby(df, by=None, other=False):
+def groupby(df, by=None, prediction=2, other=False):
     pa_fields =     [
     'Valence',
     'Arousal'
@@ -48,7 +49,7 @@ def groupby(df, by=None, other=False):
     df_copy = df[seven_fields + pa_fields].copy()
     
     for field in pa_fields:
-        df_copy[field] = df_copy[field].apply(lambda x: round(float(x), 2))
+        df_copy[field] = df_copy[field].apply(lambda x: round(float(x), prediction))
     for field in seven_fields:
         df_copy[field] = df_copy[field].apply(lambda x: float(x))
     
@@ -106,4 +107,21 @@ def refitting(models, test, df_metrics, df_train=None, v=1,
         df_metrics = df_metrics.append(entry_dict, ignore_index = True)
         print(entry_dict)
     return df_metrics
+
+def plot_emotions(models, df_clear, df_metrics, df_clear_metrics, scale=False, figsize=(20, 15)):
+    plt.figure(figsize=figsize)
+    for i, model_tuple in enumerate(models):
+        values = model_tuple[2].predict(df_clear).max().values
+        if scale:
+            values /= df_clear.max().values[:-2]
+        plt.plot(seven_fields, values, label=model_tuple[0])
+        entry_dict = {'model': model_tuple[0]}
+        entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
+        entry_dict.update({emotion: values[j] for j, emotion in enumerate(seven_fields)})
+        df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
+    plt.xlabel("Эмоции")
+    plt.ylabel("Максимальные значения")
+    plt.legend()
+    plt.show()
+    return df_clear_metrics
 
