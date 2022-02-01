@@ -5,6 +5,34 @@ import random
 import matplotlib.pyplot as plt
 
 
+pa_fields =     [
+    'Valence',
+    'Arousal'
+]
+
+seven_fields = [
+    'Neutral', 
+    'Happy', 
+    'Sad', 
+    'Angry', 
+    'Surprised', 
+    'Scared', 
+    'Disgusted'
+]
+
+metrics = ['mean', 'norm', 'stat']
+
+clear_count_dict = {
+    'Neutral': 200,
+    'Happy': 200,
+    'Sad': 14,
+    'Angry': 44,
+    'Surprised': 30,
+    'Scared': 12,
+    'Disgusted': 30
+}
+
+
 def save_to_db(db_path, name_db, df):
     connection = sqlite3.connect(db_path)
     df_columns = [field.replace('-', '_') for field in df.columns]
@@ -29,20 +57,6 @@ create table {name_db} (
     return connection
 
 def groupby(df, by=None, prediction=2, other=False):
-    pa_fields =     [
-    'Valence',
-    'Arousal'
-    ]
-    seven_fields = [
-        'Neutral', 
-        'Happy', 
-        'Sad', 
-        'Angry', 
-        'Surprised', 
-        'Scared', 
-        'Disgusted'
-    ]
-    
     if by is None:
         by = pa_fields
         
@@ -76,9 +90,11 @@ def groupby(df, by=None, prediction=2, other=False):
             df_train = pd.concat([df_train, group[1].iloc[i:i + 1]], axis=0)
         if other:
             all_i_without_rand_set = set(range(len_group)) - rand_set
-            df_other = pd.concat([df_other, group[1].iloc[list(all_i_without_rand_set)]], axis=0)
+            df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
     if other:
-        return df_train, df_other
+        for field in seven_fields + pa_fields:
+            df_other[field] = df_other[field].apply(lambda x: float(x))
+        return df_train, df_other[seven_fields + pa_fields]
     return df_train
 
 def apply_float(df_, columns):
@@ -111,16 +127,20 @@ def refitting(models, test, df_metrics, df_train=None, v=1,
 def plot_emotions(models, df_clear, df_metrics, df_clear_metrics, scale=False, figsize=(20, 15)):
     plt.figure(figsize=figsize)
     for i, model_tuple in enumerate(models):
-        values = model_tuple[2].predict(df_clear).max().values
-        if scale:
-            values /= df_clear.max().values[:-2]
-        plt.plot(seven_fields, values, label=model_tuple[0])
         entry_dict = {'model': model_tuple[0]}
+        for emotion in df_clear.columns[:7]:
+            n = clear_count_dict[emotion]
+            df_clear_emotion = df_clear.sort_values(emotion)[-n:]
+            emotion_mean_value = model_tuple[2].predict(df_clear_emotion).mean()[emotion]
+            if scale:
+                emotion_mean_value /= df_clear_emotion.mean()[emotion]
+            entry_dict.update({emotion: emotion_mean_value})
+        values = [entry_dict[emotion] for emotion in seven_fields]
+        plt.plot(seven_fields, values, label=model_tuple[0])
         entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
-        entry_dict.update({emotion: values[j] for j, emotion in enumerate(seven_fields)})
         df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
     plt.xlabel("Эмоции")
-    plt.ylabel("Максимальные значения")
+    plt.ylabel("Средние значения предсказанных чистых эмоций / Средние значения чистых эмоций")
     plt.legend()
     plt.show()
     return df_clear_metrics
