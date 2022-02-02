@@ -2,7 +2,7 @@ import pandas as pd
 import re
 import numpy as np
 from itertools import chain
-from nn_train.tools import groupby
+from nn_train.tools import groupby, clear_count_dict
 from sklearn.model_selection import train_test_split
 import random
 
@@ -88,7 +88,7 @@ class NeuralNetwork:
         res.append(re.split('_video_', fragments[1])[0])
         return ''.join(res)
     
-    def model_metric(self, test, type_='mean'):        
+    def model_metric(self, test, type_='mean', scale=False):        
         if type_ == 'mean':
             array = np.absolute(self.get_diff(test).values)
             coefs = np.array(range(array.shape[1] + 1))[1:]
@@ -110,6 +110,22 @@ class NeuralNetwork:
             stat = self.statistics(test, with_mean=True)
             vector = np.absolute(stat.values)
             return vector.mean()
+        elif type_ == 'clear':
+            df_clear = test
+            assert all([column == self.df_y.columns[i] # ['Neutral', 'Happy', 'Sad', 'Angry',
+                        for i, column in enumerate(df_clear.columns[:7])]) # 'Surprised', 'Scared', 'Disgusted']
+            emotion_mean_values = []
+            for emotion in self.df_y.columns[:7]:
+                n = clear_count_dict[emotion]
+                df_clear_emotion = df_clear.sort_values(emotion)[-n:]
+                emotion_mean_value = self.predict(df_clear_emotion).mean()[emotion]
+                if scale:
+                    emotion_mean_value /= df_clear_emotion.mean()[emotion]
+                emotion_mean_values.append(emotion_mean_value)
+            
+            metric = np.mean(emotion_mean_values)
+            
+            return metric, emotion_mean_values
         else:
             raise Exception('Unknown metric')
             
