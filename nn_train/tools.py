@@ -113,9 +113,10 @@ def make_valid_df(df_, columns=None):
     
 def refitting(models, test, df_metrics, df_train=None, v=1, 
               layer='first', epochs=20, batch_size=20, type_='diff'):
-    for nn_tuple in models:
-        nn = nn_tuple[2]
-        print('refit', nn_tuple[0])
+    for nn_list in models:
+        nn_list[0] = nn_list[0].split('_')[0] + f'_{v}'
+        nn = nn_list[2]
+        print('refit', nn_list[0])
         if type_ == 'diff':
             df_train = nn.create_train_df_from_diff(test)
         elif type_ == 'split' and df_train is not None:
@@ -123,7 +124,7 @@ def refitting(models, test, df_metrics, df_train=None, v=1,
         else:
             raise Exception('Unknown refitting type.')
         nn.fit(df_train, epochs=epochs, batch_size=batch_size)
-        entry_dict = {'model': nn_tuple[1] + f'_{v}', 'layer': layer, 'N': nn_tuple[1]}
+        entry_dict = {'model': nn_list[0], 'layer': layer, 'N': nn_list[1]}
         entry_dict.update({metric: nn.model_metric(test, metric) for metric in metrics})
         df_metrics = df_metrics.append(entry_dict, ignore_index = True)
         print(entry_dict)
@@ -147,4 +148,38 @@ def plot_emotions(models, df_clear, df_clear_metrics, scale=False, figsize=(20, 
     plt.legend()
     plt.show()
     return df_clear_metrics
+
+def create_metric_df_dict(metrics, df_metrics, df_clear_metrics):
+    metric_df_dict = {metric: df_metrics for metric in metrics[:-1]}
+    metric_df_dict.update({metrics[-1]: df_clear_metrics})
+    return metric_df_dict
+
+def plot_metrics(metric_df_dict, layer='first'):
+    # dependencies
+    mean_ = 'mean'
+    clear = 'clear'
+    
+    x = []
+    y = []
+    
+    df_metrics = metric_df_dict[mean_]
+    metrics = list(metric_df_dict.keys())
+    
+    for metric in metrics:
+        if layer == 'first':
+            x.append(df_metrics['N'])
+        else:
+            x.append(df_metrics.index)
+        df_ = metric_df_dict[metric]
+        y.append(df_[metric])
+    
+    for i in range(len(metrics)):
+        plt.plot(x[i], y[i], label=metrics[i])
+        plt.xlabel("Число нейронов N в 1 скрытом слое")
+        if metrics[i] == clear:
+            plt.ylabel("Сумма средних значений предсказанных чистых эмоций / Сумму средних значений чистых эмоций")
+        else:
+            plt.ylabel("Ошибка")
+        plt.legend()
+        plt.show()
 
