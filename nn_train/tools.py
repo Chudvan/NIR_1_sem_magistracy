@@ -183,3 +183,12 @@ def plot_metrics(metric_df_dict, layer='first'):
         plt.legend()
         plt.show()
 
+def save_models(models, path_to_saved_models, layer='first', v=1):
+    dir_path = os.path.join(path_to_saved_models, layer, f'_{v}')
+    for model_list in models:
+        N = model_list[1]
+        nn = model_list[2]
+        save_name = f'model_{layer}_{N}_{v}'
+        path = os.path.join(dir_path, save_name)
+        nn.model.save(path)
+
