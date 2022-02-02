@@ -193,11 +193,19 @@ def save_models(models, path_to_saved_models, layer='first', v=1):
         path = os.path.join(dir_path, save_name)
         nn.model.save(path)
 
+def _removeprefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
 def load_models(path_to_saved_models, df, layer='first', v=1):
+    from tensorflow.keras.models import load_model
+    from nn_train.neural_network import NeuralNetwork
+
     dir_path = os.path.join(path_to_saved_models, layer, f'_{v}')
     models = [el for el in list(os.walk('..')) if dir_path in el[0]][0][1]
     for i in range(len(models)):
-        model_layers_v = removeprefix(models[i], f'model_{layer}_')
+        model_layers_v = _removeprefix(models[i], f'model_{layer}_')
         N = model_layers_v.split('_')[0]
         path = os.path.join(dir_path, models[i])
         model = load_model(path)
