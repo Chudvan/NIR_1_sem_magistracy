@@ -129,20 +129,18 @@ def refitting(models, test, df_metrics, df_train=None, v=1,
         print(entry_dict)
     return df_metrics
 
-def plot_emotions(models, df_clear, df_metrics, df_clear_metrics, scale=False, figsize=(20, 15)):
+def plot_emotions(models, df_clear, df_clear_metrics, scale=False, figsize=(20, 15)):
     plt.figure(figsize=figsize)
     for i, model_tuple in enumerate(models):
         entry_dict = {'model': model_tuple[0]}
-        for emotion in df_clear.columns[:7]:
-            n = clear_count_dict[emotion]
-            df_clear_emotion = df_clear.sort_values(emotion)[-n:]
-            emotion_mean_value = model_tuple[2].predict(df_clear_emotion).mean()[emotion]
-            if scale:
-                emotion_mean_value /= df_clear_emotion.mean()[emotion]
-            entry_dict.update({emotion: emotion_mean_value})
-        values = [entry_dict[emotion] for emotion in seven_fields]
-        plt.plot(seven_fields, values, label=model_tuple[0])
-        entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
+        nn = model_tuple[2]
+        clear_metric, emotion_mean_values = nn.model_metric(df_clear, 'clear', scale=scale)
+        entry_dict.update({'clear': clear_metric})
+        for j, emotion in enumerate(df_clear.columns[:7]):
+            entry_dict.update({emotion: emotion_mean_values[j]})
+        
+        plt.plot(seven_fields, emotion_mean_values, label=model_tuple[0])
+        # entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
         df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
     plt.xlabel("Эмоции")
     plt.ylabel("Средние значения предсказанных чистых эмоций / Средние значения чистых эмоций")
