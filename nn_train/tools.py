@@ -20,6 +20,8 @@ seven_fields = [
     'Disgusted'
 ]
 
+fields = seven_fields + pa_fields
+
 metrics = ['mean', 'norm', 'stat']
 
 clear_count_dict = {
@@ -56,7 +58,7 @@ create table {name_db} (
     connection.commit()
     return connection
 
-def groupby(df, by=None, prediction=2, other=False):
+def groupby(df, by=None, prediction=2, other=False, other_groupby=True):
     if by is None:
         by = pa_fields
         
@@ -90,7 +92,10 @@ def groupby(df, by=None, prediction=2, other=False):
             df_train = pd.concat([df_train, group[1].iloc[i:i + 1]], axis=0)
         if other:
             all_i_without_rand_set = set(range(len_group)) - rand_set
-            df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
+            if other_groupby:
+            	df_other = pd.concat([df_other, group[1].iloc[list(all_i_without_rand_set)]], axis=0)
+            else:
+            	df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
     if other:
         for field in seven_fields + pa_fields:
             df_other[field] = df_other[field].apply(lambda x: float(x))
