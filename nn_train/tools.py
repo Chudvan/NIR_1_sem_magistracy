@@ -216,3 +216,10 @@ def load_models(path_to_saved_models, df, layer='first', v=1):
     
     return models
 
+def create_df_metrics(models, test, df_metrics, layer='first'):
+    for model_list in models:
+        entry_dict = {'model': model_list[0], 'layer': layer, 'N': model_list[1]}
+        entry_dict.update({metric: model_list[2].model_metric(test, metric) for metric in metrics})
+        df_metrics = df_metrics.append(entry_dict, ignore_index = True)
+    return df_metrics
+
