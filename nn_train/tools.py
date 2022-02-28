@@ -198,14 +198,24 @@ def _removeprefix(text, prefix):
         return text[len(prefix):]
     return text
 
-def load_models(path_to_saved_models, df, layer='first', v=1):
+def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1):
     from tensorflow.keras.models import load_model
     from nn_train.neural_network import NeuralNetwork
 
     dir_path = os.path.join(path_to_saved_models, layer, f'_{v}')
-    models = [el for el in list(os.walk('..')) if dir_path in el[0]][0][1]
+    if models_list is None:
+        models = [el for el in list(os.walk('..')) if dir_path in el[0]][0][1]
+    else:
+        prefix = f'model_{layer}_'
+        if (layer == 'first' or layer == 'third') and v == 1:
+            models = [prefix + N for N in models_list]
+        elif layer == 'third' and v != 2:
+            models = [N + f'_{v}' for N in models_list]
+        else:
+            models = [prefix + N + f'_{v}' for N in models_list]
+#     print(models)
     for i in range(len(models)):
-        model_layers_v = _removeprefix(models[i], f'model_{layer}_')
+        model_layers_v = tools._removeprefix(models[i], f'model_{layer}_')
         N = model_layers_v.split('_')[0]
         path = os.path.join(dir_path, models[i])
         model = load_model(path)
