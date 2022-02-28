@@ -238,18 +238,22 @@ def create_df_metrics(models, test, df_metrics, layer='first'):
     
 def display_dfs(*args, titles=cycle(['']), mode='column'):
     html_str=''
-    for df,title in zip(args, chain(titles,cycle(['</br>'])) ):
-        cur_html_str = ''
-        cur_html_str+='<td style="vertical-align:top">'
-        cur_html_str+=f'<h2>{title}</h2>'
-        cur_html_str+=df.to_html().replace('table','table style="display:inline"')
+    for df,title in zip(args, chain(titles,cycle(['</br>']))):
+        cur_html_str = '<td style="vertical-align:top">'
+        if mode == 'column':
+            cur_html_str+=f'<h2 align="left">{title}</h2>'
+        elif mode == 'row':
+            cur_html_str+=f'<h2 align="center">{title}</h2>'
+        else:
+            raise Exception(f'Unknown mode: {mode}')
+        cur_html_str+=df.to_html().replace('table','table style="display:inline" align="left"')
         cur_html_str+='</td>'
         if mode == 'column':
-            cur_html_str = '<tr>' + cur_html_str + '</tr>'
+            cur_html_str = '<tr align="left">' + cur_html_str + '</tr>'
         elif mode == 'row':
             pass
         else:
             raise Exception(f'Unknown mode: {mode}')
         html_str += cur_html_str
     display_html(html_str,raw=True)
-    
+
