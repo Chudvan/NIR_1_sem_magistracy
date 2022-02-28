@@ -80,7 +80,7 @@ class NeuralNetwork:
         return diff_df
     
     @classmethod
-    def create_add_to_index(csv_file):   
+    def create_add_to_index(cls, csv_file):   
         res = []
         without_participant = re.split('Participant \d*', csv_file)[1]
         fragments = re.split('Analysis ', without_participant)
