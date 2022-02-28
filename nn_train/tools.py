@@ -215,7 +215,7 @@ def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1):
             models = [prefix + N + f'_{v}' for N in models_list]
 #     print(models)
     for i in range(len(models)):
-        model_layers_v = tools._removeprefix(models[i], f'model_{layer}_')
+        model_layers_v = _removeprefix(models[i], f'model_{layer}_')
         N = model_layers_v.split('_')[0]
         path = os.path.join(dir_path, models[i])
         model = load_model(path)
