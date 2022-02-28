@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from IPython.display import display_html
+from itertools import chain,cycle
 
 
 pa_fields =     [
@@ -198,7 +200,7 @@ def _removeprefix(text, prefix):
         return text[len(prefix):]
     return text
 
-def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1):
+def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1, sort=True):
     from tensorflow.keras.models import load_model
     from nn_train.neural_network import NeuralNetwork
 
@@ -222,7 +224,8 @@ def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1):
         nn = NeuralNetwork(df[pa_fields], df[seven_fields], model)
         models[i] = [model_layers_v, N, nn]
     
-    models.sort(key=lambda x: list(map(int, x[1].split('.'))))
+    if sort:
+    	models.sort(key=lambda x: list(map(int, x[1].split('.'))))
     
     return models
 
@@ -232,4 +235,21 @@ def create_df_metrics(models, test, df_metrics, layer='first'):
         entry_dict.update({metric: model_list[2].model_metric(test, metric) for metric in metrics})
         df_metrics = df_metrics.append(entry_dict, ignore_index = True)
     return df_metrics
-
+    
+def display_dfs(*args, titles=cycle(['']), mode='column'):
+    html_str=''
+    for df,title in zip(args, chain(titles,cycle(['</br>'])) ):
+        cur_html_str = ''
+        cur_html_str+='<td style="vertical-align:top">'
+        cur_html_str+=f'<h2>{title}</h2>'
+        cur_html_str+=df.to_html().replace('table','table style="display:inline"')
+        cur_html_str+='</td>'
+        if mode == 'column':
+            cur_html_str = '<tr>' + cur_html_str + '</tr>'
+        elif mode == 'row':
+            pass
+        else:
+            raise Exception(f'Unknown mode: {mode}')
+        html_str += cur_html_str
+    display_html(html_str,raw=True)
+    
