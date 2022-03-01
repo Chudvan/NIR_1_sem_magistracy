@@ -200,7 +200,8 @@ def _removeprefix(text, prefix):
         return text[len(prefix):]
     return text
 
-def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1, sort=True):
+def load_models(path_to_saved_models, df, models_list=None, layer='first', 
+                v=1, sort=True, csv_test_file=None):
     from tensorflow.keras.models import load_model
     from nn_train.neural_network import NeuralNetwork
 
@@ -221,7 +222,7 @@ def load_models(path_to_saved_models, df, models_list=None, layer='first', v=1, 
         N = model_layers_v.split('_')[0]
         path = os.path.join(dir_path, models[i])
         model = load_model(path)
-        nn = NeuralNetwork(df[pa_fields], df[seven_fields], model)
+        nn = NeuralNetwork(df[pa_fields], df[seven_fields], model, csv_test_file)
         models[i] = [model_layers_v, N, nn]
     
     if sort:

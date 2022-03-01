@@ -2,13 +2,13 @@ import pandas as pd
 import re
 import numpy as np
 from itertools import chain
-from nn_train.tools import groupby, clear_count_dict
+from nn_train.tools import groupby, clear_count_dict, display_dfs
 from sklearn.model_selection import train_test_split
 import random
 
 
 class NeuralNetwork:
-    def __init__(self, x, y, model=None):
+    def __init__(self, x, y, model=None, csv_test_file=None):
         self.df_x = x
         for field in self.df_x.columns:
             self.df_x[field] = self.df_x[field].apply(lambda entry: float(entry))
@@ -16,6 +16,8 @@ class NeuralNetwork:
         for field in self.df_y.columns:
             self.df_y[field] = self.df_y[field].apply(lambda entry: float(entry))
         self.model = model
+        self._csv_test_file = csv_test_file
+        self._add_to_index = None
         self.from_ = 0
         self.to = 1
         
@@ -26,6 +28,12 @@ class NeuralNetwork:
     @property
     def seven_fields(self):
         return list(self.df_y.columns)
+        
+    @property
+    def add_to_index(self):
+    	if self._add_to_index is None:
+    	    self._add_to_index = self.create_add_to_index(self._csv_test_file)
+    	return self._add_to_index
     
     def get_df_xy(self, from_ = None, to = None, xy = None):
         if xy is None:
@@ -62,6 +70,22 @@ class NeuralNetwork:
             df_res.columns = self.df_y.columns
             df_res.index = test.index
         return df_res
+        
+    def test_model(self, video_time_tuple_list):
+    	dfs = []
+    	titles = []
+    	for video_time_tuple in video_time_tuple_list:
+    	    df_x_ = self.get_df_xy(video_time_tuple[0] + self.add_to_index, 
+                                   video_time_tuple[1] + self.add_to_index)
+    	    df_y_ = self.get_df_xy(xy = 'y')
+    	    df_predict_ = self.predict()
+    	    dfs.append(df_x_)
+    	    titles.append(', '.join(video_time_tuple) + f' | VA (original data)')
+    	    dfs.append(df_y_)
+    	    titles.append(', '.join(video_time_tuple) + f' | 7 emotions (original data)')
+    	    dfs.append(df_predict_)
+    	    titles.append(', '.join(video_time_tuple) + f' | 7 emotions (predict data)')
+    	display_dfs(*dfs, titles=titles)
     
     def get_test(self, n=None):
         if n is None:
