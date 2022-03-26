@@ -1,3 +1,4 @@
+venv/
 Test/.ipynb_checkpoints/
 Development/.ipynb_checkpoints
 nn_train/.ipynb_checkpoints
