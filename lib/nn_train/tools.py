@@ -207,7 +207,7 @@ def load_models(path_to_saved_models, df, models_list=None, layer='first',
 
     dir_path = os.path.join(path_to_saved_models, layer, f'_{v}')
     if models_list is None:
-        models = [el for el in list(os.walk('..')) if dir_path in el[0]][0][1]
+        models = list(os.walk(dir_path))[0][1]
     else:
         prefix = f'model_{layer}_'
         if (layer == 'first' or layer == 'third') and v == 1:
