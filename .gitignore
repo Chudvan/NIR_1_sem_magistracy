@@ -1,4 +1,10 @@
+venv/
 Test/.ipynb_checkpoints/
+Development/.ipynb_checkpoints
+lib/nn_train/.ipynb_checkpoints
+jupyter_notebooks/nn_train/.ipynb_checkpoints
+jupyter_notebooks/Data/.ipynb_checkpoints
+jupyter_notebooks/Test/.ipynb_checkpoints
 By_dates
 Links.txt
 New.txt
@@ -25,4 +31,4 @@ Participant 1_Керов Андрей_Analysis 8_video_20190605_105550_detailed.
 Participant 1_Керов Андрей_Analysis 9_video_20190605_105551_detailed.csv
 Aleksashina_Керов_Андрей.db
 Data/.ipynb_checkpoints/
-NeuralNetwork/.ipynb_checkpoints/
+nn_train/.ipynb_checkpoints/
