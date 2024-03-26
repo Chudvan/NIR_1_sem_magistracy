@@ -133,21 +133,35 @@ def refitting(models, test, df_metrics, df_train=None, v=1,
         print(entry_dict)
     return df_metrics
 
-def plot_emotions(models, df_clear, df_clear_metrics, scale=False, figsize=(20, 15)):
+def plot_emotions(models, df_clear, df_clear_metrics, fitting_algorithm='another', df_metrics=None, scale=False, figsize=(20, 15)):
     plt.figure(figsize=figsize)
-    for i, model_tuple in enumerate(models):
-        entry_dict = {'model': model_tuple[0]}
-        nn = model_tuple[2]
-        clear_metric, emotion_mean_values = nn.model_metric(df_clear, 'clear', scale=scale)
-        entry_dict.update({'clear': clear_metric})
-        for j, emotion in enumerate(df_clear.columns[:7]):
-            entry_dict.update({emotion: emotion_mean_values[j]})
-        
-        plt.plot(seven_fields, emotion_mean_values, label=model_tuple[0])
-        # entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
-        df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
-    plt.xlabel("Эмоции")
-    plt.ylabel("Средние значения предсказанных чистых эмоций / Средние значения чистых эмоций")
+    if fitting_algorithm == 'another':
+        for i, model_tuple in enumerate(models):
+            entry_dict = {'model': model_tuple[0]}
+            nn = model_tuple[2]
+            clear_metric, emotion_mean_values = nn.model_metric(df_clear, 'clear', scale=scale)
+            entry_dict.update({'clear': clear_metric})
+            for j, emotion in enumerate(df_clear.columns[:7]):
+                entry_dict.update({emotion: emotion_mean_values[j]})
+
+            plt.plot(seven_fields, emotion_mean_values, label=model_tuple[0])
+            # entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
+            df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
+        plt.xlabel("Эмоции")
+        plt.ylabel("Средние значения предсказанных чистых эмоций / Средние значения чистых эмоций")
+    else:
+        fitting_algorithm = 'master'
+        for i, model_tuple in enumerate(models):
+            values = model_tuple[2].predict(df_clear).max().values
+            if scale:
+                values /= df_clear.max().values[:-2]
+            plt.plot(seven_fields, values, label=model_tuple[0])
+            entry_dict = {'model': model_tuple[0]}
+            entry_dict.update({metric: df_metrics.iloc[i][metric] for metric in metrics})
+            entry_dict.update({emotion: values[j] for j, emotion in enumerate(seven_fields)})
+            df_clear_metrics = df_clear_metrics.append(entry_dict, ignore_index = True)
+        plt.xlabel("Эмоции")
+        plt.ylabel("Максимальные значения")
     plt.legend()
     plt.show()
     return df_clear_metrics
