@@ -25,6 +25,10 @@ pip install pygraphviz
 ```
 export NIR_1_sem_magistracy="<локальная папка репозитория NIR_1_sem_magistracy>"
 ```
+* Если используются модели (или другие папки/файлы) из NIR_3_sem_magistracy, дополнительно настроить:
+```
+export NIR_3_sem_magistracy="<локальная папка репозитория NIR_3_sem_magistracy>"
+```
 5. Скачать данные (Data) и модели (saved_models) с диска для папок:
     - Data - https://disk.yandex.ru/d/H1FE-7VO5wYVXQ
     - saved_models - https://disk.yandex.ru/d/_seqTpaSuFdO7Q
@@ -49,5 +53,9 @@ export NIR_1_sem_magistracy="<локальная папка репозитори
 3. Настройка переменных окружения:
 ```
 export NIR_1_sem_magistracy="<локальная папка репозитория NIR_1_sem_magistracy>"
+```
+* Если используются модели (или другие папки/файлы) из NIR_3_sem_magistracy, дополнительно настроить:
+```
+export NIR_3_sem_magistracy="<локальная папка репозитория NIR_3_sem_magistracy>"
 ```
 4. Запуск Jupyter notebook командой: ```jupyter-notebook```
