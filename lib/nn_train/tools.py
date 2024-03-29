@@ -38,6 +38,44 @@ clear_count_dict = {
 }
 
 
+def replace_end_symb(csv_path, encoding=None):
+    if not encoding:
+        encoding = "UTF-8"
+    f = open(csv_path, encoding = encoding)
+    text = f.read()
+    text = text.replace('\t\n', '\n')
+    f.close()
+    f = open(csv_path, 'w', encoding = encoding)
+    f.write(text)
+    f.close()
+    
+def create_correct_df(data_dir, csv_file, encoding=None):
+    from .neural_network import NeuralNetwork
+    if not encoding:
+        encoding = "UTF-8"
+    csv_path = os.path.join(data_dir, csv_file)
+    replace_end_symb(csv_path, encoding)
+    df = pd.read_csv(csv_path, sep='\t', skiprows = lambda i: i in list(range(8)), encoding = encoding)
+    if len(df.columns) < 70:
+        df = pd.read_csv(csv_path, sep=';', skiprows = lambda i: i in list(range(8)), encoding = encoding)
+    df_first = df.columns[0]
+    unknown_index = list(df.columns).index('Event Marker')
+    df.columns = df.columns[1:].insert(unknown_index, 'UNKNOWN')
+    df.insert(0, df_first, df.index)
+    add_to_index = NeuralNetwork.create_add_to_index(csv_file)
+    df.index = [index + add_to_index for index in df.index]
+    df.insert(0, 'Index_', df.index)
+    df = df[ # Without FIT_FAILED and FIND_FAILED
+        (df['Neutral'] != 'FIT_FAILED') & 
+        (df['Neutral'] != 'FIND_FAILED')
+    ]
+    return df
+    
+def concat_next_csv(df, data_dir, csv_file, encoding=None):
+    df_2 = create_correct_df(data_dir, csv_file, encoding=None)
+    df = pd.concat([df, df_2], axis=0)
+    return df
+
 def save_to_db(db_path, name_db, df):
     connection = sqlite3.connect(db_path)
     df_columns = [field.replace('-', '_') for field in df.columns]
@@ -271,4 +309,3 @@ def display_dfs(*args, titles=cycle(['']), mode='column'):
             raise Exception(f'Unknown mode: {mode}')
         html_str += cur_html_str
     display_html(html_str,raw=True)
-
