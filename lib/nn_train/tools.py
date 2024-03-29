@@ -98,6 +98,11 @@ create table {name_db} (
         connection.execute(f"INSERT OR IGNORE INTO {name_db} VALUES({values})", tuple(row[1]))
     connection.commit()
     return connection
+    
+def load_from_db(db_path, name_db):
+    connection = sqlite3.connect(db_path)
+    df = pd.read_sql(f'select * from {name_db}', con=connection)
+    return df
 
 def groupby(df, by=None, prediction=2, other=False, other_groupby=True):
     if by is None:
