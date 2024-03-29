@@ -65,14 +65,15 @@ def create_correct_df(data_dir, csv_file, encoding=None):
     add_to_index = NeuralNetwork.create_add_to_index(csv_file)
     df.index = [index + add_to_index for index in df.index]
     df.insert(0, 'Index_', df.index)
-    df = df[ # Without FIT_FAILED and FIND_FAILED
+    df = df[ # Without 'FIT_FAILED', 'FIND_FAILED' and 'Not Analyzed'
         (df['Neutral'] != 'FIT_FAILED') & 
-        (df['Neutral'] != 'FIND_FAILED')
+        (df['Neutral'] != 'FIND_FAILED') &
+        (df['Neutral'] != 'Not Analyzed')
     ]
     return df
     
 def concat_next_csv(df, data_dir, csv_file, encoding=None):
-    df_2 = create_correct_df(data_dir, csv_file, encoding=None)
+    df_2 = create_correct_df(data_dir, csv_file, encoding = encoding)
     df = pd.concat([df, df_2], axis=0)
     return df
 
