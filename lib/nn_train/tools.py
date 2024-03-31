@@ -57,7 +57,7 @@ def create_correct_df(data_dir, csv_file, sep=None, add_to_index=True, unknown=T
         encoding = "UTF-8"
     csv_path = os.path.join(data_dir, csv_file)
     skip_index = replace_end_symb_and_get_skiprows(csv_path, encoding)
-    print(skip_index)
+#     print(skip_index)
     seps = ['\t', ';', ',']
     if sep:
         seps.insert(0, sep)
@@ -67,7 +67,7 @@ def create_correct_df(data_dir, csv_file, sep=None, add_to_index=True, unknown=T
             break
     else:
         raise Exception(f'Unknown sep')
-    print(len(df.columns), df.columns)
+#     print(len(df.columns), df.columns)
     df_first = df.columns[0]
     if unknown:
         unknown_index = list(df.columns).index('Event Marker')
