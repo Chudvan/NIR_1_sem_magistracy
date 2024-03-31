@@ -38,7 +38,7 @@ clear_count_dict = {
 }
 
 
-def replace_end_symb(csv_path, encoding=None):
+def replace_end_symb_and_get_skiprows(csv_path, encoding=None):
     if not encoding:
         encoding = "UTF-8"
     f = open(csv_path, encoding = encoding)
@@ -48,22 +48,34 @@ def replace_end_symb(csv_path, encoding=None):
     f = open(csv_path, 'w', encoding = encoding)
     f.write(text)
     f.close()
+    skip_index = next((i for i, s in enumerate(text.split('\n')) if 'Neutral' in s), None)
+    return skip_index
     
-def create_correct_df(data_dir, csv_file, encoding=None):
+def create_correct_df(data_dir, csv_file, sep=None, add_to_index=True, unknown=True, encoding=None):
     from .neural_network import NeuralNetwork
     if not encoding:
         encoding = "UTF-8"
     csv_path = os.path.join(data_dir, csv_file)
-    replace_end_symb(csv_path, encoding)
-    df = pd.read_csv(csv_path, sep='\t', skiprows = lambda i: i in list(range(8)), encoding = encoding)
-    if len(df.columns) < 70:
-        df = pd.read_csv(csv_path, sep=';', skiprows = lambda i: i in list(range(8)), encoding = encoding)
+    skip_index = replace_end_symb_and_get_skiprows(csv_path, encoding)
+    print(skip_index)
+    seps = ['\t', ';', ',']
+    if sep:
+        seps.insert(0, sep)
+    for sep in seps:
+        df = pd.read_csv(csv_path, sep=sep, skiprows = lambda i: i in list(range(skip_index)), encoding = encoding)
+        if len(df.columns) != 1:
+            break
+    else:
+        raise Exception(f'Unknown sep')
+    print(len(df.columns), df.columns)
     df_first = df.columns[0]
-    unknown_index = list(df.columns).index('Event Marker')
-    df.columns = df.columns[1:].insert(unknown_index, 'UNKNOWN')
-    df.insert(0, df_first, df.index)
-    add_to_index = NeuralNetwork.create_add_to_index(csv_file)
-    df.index = [index + add_to_index for index in df.index]
+    if unknown:
+        unknown_index = list(df.columns).index('Event Marker')
+        df.columns = df.columns[1:].insert(unknown_index, 'UNKNOWN')
+        df.insert(0, df_first, df.index)
+    if add_to_index:
+        add_to_index = NeuralNetwork.create_add_to_index(csv_file)
+        df.index = [index + add_to_index for index in df.index]
     df.insert(0, 'Index_', df.index)
     df = df[ # Without 'FIT_FAILED', 'FIND_FAILED' and 'Not Analyzed'
         (df['Neutral'] != 'FIT_FAILED') & 
