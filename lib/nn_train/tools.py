@@ -23,6 +23,51 @@ seven_fields = [
     'Disgusted'
 ]
 
+facs_fields = [
+    'Action_Unit_01___Inner_Brow_Raiser',
+    'Action_Unit_02___Outer_Brow_Raiser',
+    'Action_Unit_04___Brow_Lowerer',
+    'Action_Unit_05___Upper_Lid_Raiser',
+    'Action_Unit_06___Cheek_Raiser',
+    'Action_Unit_07___Lid_Tightener',
+    'Action_Unit_09___Nose_Wrinkler',
+    'Action_Unit_10___Upper_Lip_Raiser',
+    'Action_Unit_12___Lip_Corner_Puller',
+    'Action_Unit_14___Dimpler',
+    'Action_Unit_15___Lip_Corner_Depressor',
+    'Action_Unit_17___Chin_Raiser',
+    'Action_Unit_18___Lip_Pucker',
+    'Action_Unit_20___Lip_Stretcher',
+    'Action_Unit_23___Lip_Tightener',
+    'Action_Unit_24___Lip_Pressor',
+    'Action_Unit_25___Lips_Part',
+    'Action_Unit_26___Jaw_Drop',
+    'Action_Unit_27___Mouth_Stretch',
+    'Action_Unit_43___Eyes_Closed',
+    'Action_Unit_01___Left___Inner_Brow_Raiser',
+    'Action_Unit_02___Left___Outer_Brow_Raiser',
+    'Action_Unit_04___Left___Brow_Lowerer',
+    'Action_Unit_05___Left___Upper_Lid_Raiser',
+    'Action_Unit_06___Left___Cheek_Raiser',
+    'Action_Unit_07___Left___Lid_Tightener',
+    'Action_Unit_12___Left___Lip_Corner_Puller',
+    'Action_Unit_14___Left___Dimpler',
+    'Action_Unit_15___Left___Lip_Corner_Depressor',
+    'Action_Unit_20___Left___Lip_Stretcher',
+    'Action_Unit_43___Left___Eyes_Closed',
+    'Action_Unit_01___Right___Inner_Brow_Raiser',
+    'Action_Unit_02___Right___Outer_Brow_Raiser',
+    'Action_Unit_04___Right___Brow_Lowerer',
+    'Action_Unit_05___Right___Upper_Lid_Raiser',
+    'Action_Unit_06___Right___Cheek_Raiser',
+    'Action_Unit_07___Right___Lid_Tightener',
+    'Action_Unit_12___Right___Lip_Corner_Puller',
+    'Action_Unit_14___Right___Dimpler',
+    'Action_Unit_15___Right___Lip_Corner_Depressor',
+    'Action_Unit_20___Right___Lip_Stretcher',
+    'Action_Unit_43___Right___Eyes_Closed'
+]
+
 fields = seven_fields + pa_fields
 
 metrics = ['mean', 'norm', 'stat']
@@ -50,6 +95,13 @@ def replace_end_symb_and_get_skiprows(csv_path, encoding=None):
     f.close()
     skip_index = next((i for i, s in enumerate(text.split('\n')) if 'Neutral' in s), None)
     return skip_index
+    
+def filter_by_type(value):
+    try:
+        float(value)
+    except:
+        return False
+    return True
     
 def create_correct_df(data_dir, csv_file, sep=None, add_to_index=True, unknown=True, encoding=None):
     from .neural_network import NeuralNetwork
@@ -82,17 +134,26 @@ def create_correct_df(data_dir, csv_file, sep=None, add_to_index=True, unknown=T
         (df['Neutral'] != 'FIND_FAILED') &
         (df['Neutral'] != 'Not Analyzed')
     ]
-    return df
+    replace_space_dash_df_columns(df)
+    mask = df[pa_fields[0]].apply(filter_by_type)
+    for field in seven_fields + pa_fields + facs_fields:
+        mask &= df[field].apply(filter_by_type)
+    return df[mask]
     
 def concat_next_csv(df, data_dir, csv_file, encoding=None):
     df_2 = create_correct_df(data_dir, csv_file, encoding = encoding)
     df = pd.concat([df, df_2], axis=0)
     return df
+    
+def replace_space_dash_df_columns(df):
+    df_columns = [field.replace('-', '_') for field in df.columns]
+    df_columns = [field.replace(' ', '_') for field in df_columns]
+    df.columns = df_columns
+    return df_columns
 
 def save_to_db(db_path, name_db, df):
     connection = sqlite3.connect(db_path)
-    df_columns = [field.replace('-', '_') for field in df.columns]
-    df_columns = [field.replace(' ', '_') for field in df_columns]
+    df_columns = replace_space_dash_df_columns(df)
     try:
         i = df_columns.index('3d_Landmarks')
         df_columns[i] = 'three_d_Landmarks'
