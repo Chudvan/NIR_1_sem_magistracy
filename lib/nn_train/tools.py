@@ -178,29 +178,31 @@ def load_from_db(db_path, name_db):
     df = pd.read_sql(f'select * from {name_db}', con=connection)
     return df
 
-def groupby(df, by=None, prediction=2, other=False, other_groupby=True):
+def groupby(df, by=None, y=None, prediction=2, other=False, other_groupby=True):
     if by is None:
         by = pa_fields
-        
-    df_copy = df[seven_fields + pa_fields].copy()
-    
-    for field in pa_fields:
+
+    if y is None:
+    	y = seven_fields
+
+    df_copy = df.copy()
+
+    for field in by:
         df_copy[field] = df_copy[field].apply(lambda x: round(float(x), prediction))
-    for field in seven_fields:
-        df_copy[field] = df_copy[field].apply(lambda x: float(x))
-    
+
     df_copy.index = df['Index_']
-    
+
     groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))
     for group in groupby_fields_sorted:
-        for field in seven_fields:
+        for field in y:
             group[1][field] = round(group[1][field].mean(), prediction)
-            
+
     df_train = pd.DataFrame()
     if other:
         df_other = pd.DataFrame()
-    
-    for group in groupby_fields_sorted:
+
+    for n, group in enumerate(groupby_fields_sorted):
+        print(n)
         len_group = len(group[1])
         ln_ = np.log10(len_group)
         rand_set = set()
@@ -217,9 +219,9 @@ def groupby(df, by=None, prediction=2, other=False, other_groupby=True):
             else:
             	df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
     if other:
-        for field in seven_fields + pa_fields:
+        for field in y + by:
             df_other[field] = df_other[field].apply(lambda x: float(x))
-        return df_train, df_other[seven_fields + pa_fields]
+        return df_train, df_other[y + by]
     return df_train
 
 def apply_float(df_, columns):
