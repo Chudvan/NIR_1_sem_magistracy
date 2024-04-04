@@ -178,12 +178,20 @@ def load_from_db(db_path, name_db):
     df = pd.read_sql(f'select * from {name_db}', con=connection)
     return df
 
-def groupby(df, by=None, y=None, prediction=2, other=False, other_groupby=True):
+def groupby(df, by=None, y=None, from_=None, to=None, prediction=2, other=False, other_groupby=True):
     if by is None:
         by = pa_fields
 
     if y is None:
     	y = seven_fields
+    	
+    if from_ is None:
+        from_ = 0
+    if to is None:
+        to = 100_000_000
+    if (type(from_) != int) or (type(to) != int):
+        int(from_) 
+        int(to)
 
     df_copy = df.copy()
 
@@ -192,17 +200,16 @@ def groupby(df, by=None, y=None, prediction=2, other=False, other_groupby=True):
 
     df_copy.index = df['Index_']
 
-    groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))
-    for group in groupby_fields_sorted:
-        for field in y:
-            group[1][field] = round(group[1][field].mean(), prediction)
+    groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))[from_:to]
 
     df_train = pd.DataFrame()
     if other:
         df_other = pd.DataFrame()
 
     for n, group in enumerate(groupby_fields_sorted):
-        print(n)
+        print(n + from_)
+        for field in y:
+            group[1][field] = round(group[1][field].mean(), prediction)
         len_group = len(group[1])
         ln_ = np.log10(len_group)
         rand_set = set()
