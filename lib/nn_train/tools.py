@@ -6,7 +6,11 @@ import random
 import matplotlib.pyplot as plt
 from IPython.display import display_html
 from itertools import chain,cycle
+import pickle
 
+
+FILESIZE_LIMIT = 500*1024*1024
+NUMBER_OF_FILE_PARTS = 2
 
 pa_fields =     [
     'Valence',
@@ -178,13 +182,57 @@ def load_from_db(db_path, name_db):
     df = pd.read_sql(f'select * from {name_db}', con=connection)
     return df
 
-def groupby(df, by=None, y=None, from_=None, to=None, prediction=2, other=False, other_groupby=True):
+def check_save_load_list_path(save_list_path, load_list_path):
+    if (save_list_path is not None) and (load_list_path is not None):
+        raise Exception('One of args: save_list_path or load_list_path must be None.')
+    if save_list_path is not None:
+        a = [1, 2, 3]
+        save_obj(a, save_list_path, test=True)
+        os.remove(save_list_path)
+    if load_list_path is not None:
+        with open(load_list_path, 'rb') as f:
+            loaded_list = pickle.load(f)
+        return loaded_list
+
+def save_obj(obj, save_obj_path, test=False):
+    with open(save_obj_path, 'wb') as f:
+        pickle.dump(obj, f)
+    if not os.path.exists(save_obj_path):
+        raise Exception(f"Can't save groupby_fields_sorted to {save_obj_path}.")
+    filesize = os.path.getsize(save_obj_path)
+    if filesize > FILESIZE_LIMIT:
+        n = NUMBER_OF_FILE_PARTS
+        print(f'File {save_obj_path} is too long: {filesize}.')
+    else:
+        if not test:
+            print(f'Saved {save_obj_path}.')
+        return
+    
+    # obj must be iterable
+    os.remove(save_obj_path)
+    print(f'Start splitting {save_obj_path} into {n} parts.')
+    part_size = len(obj) // n
+    #list_of_parts = np.array_split(obj, n)
+    list_of_parts = [obj[i:i+part_size] for i in range(0, len(obj), part_size)]
+    if (len(obj) % n) != 0:
+        list_of_parts.append(obj[part_size * n:])
+    print(f'Start saving parts of {save_obj_path}.')
+    for i, part in enumerate(list_of_parts):
+        save_obj_path = f"{save_obj_path.split('.pkl')[0]}_{i+1}.pkl"
+        with open(save_obj_path, 'wb') as f:
+            pickle.dump(part, f)
+        if not os.path.exists(save_obj_path):
+            raise Exception(f"Can't save groupby_fields_sorted to {save_obj_path}.")
+        print(f'Saved {save_obj_path}.')
+
+def groupby(df, by=None, y=None, from_=None, to=None, prediction=2, 
+		other=False, other_groupby=True, save_list_path=None, load_list_path=None):
     if by is None:
         by = pa_fields
 
     if y is None:
-    	y = seven_fields
-    	
+        y = seven_fields
+        
     if from_ is None:
         from_ = 0
     if to is None:
@@ -192,15 +240,20 @@ def groupby(df, by=None, y=None, from_=None, to=None, prediction=2, other=False,
     if (type(from_) != int) or (type(to) != int):
         int(from_) 
         int(to)
+        
+    groupby_fields_sorted = check_save_load_list_path(save_list_path, load_list_path)
+    
+    if load_list_path is None: # groupby_fields_sorted == None (now)
+        df_copy = df.copy()
+        df_copy.index = df['Index_']
 
-    df_copy = df.copy()
-
-    for field in by:
-        df_copy[field] = df_copy[field].apply(lambda x: round(float(x), prediction))
-
-    df_copy.index = df['Index_']
-
-    groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))[from_:to]
+        for field in by:
+            df_copy[field] = df_copy[field].apply(lambda x: round(float(x), prediction))
+        groupby_fields_sorted = list(sorted(df_copy.groupby(by), key=lambda x: -len(x[1])))
+        if save_list_path is not None:
+            save_obj(groupby_fields_sorted, save_list_path)
+    
+    groupby_fields_sorted = groupby_fields_sorted[from_:to]
 
     df_train = pd.DataFrame()
     if other:
@@ -222,9 +275,9 @@ def groupby(df, by=None, y=None, from_=None, to=None, prediction=2, other=False,
         if other:
             all_i_without_rand_set = set(range(len_group)) - rand_set
             if other_groupby:
-            	df_other = pd.concat([df_other, group[1].iloc[list(all_i_without_rand_set)]], axis=0)
+                df_other = pd.concat([df_other, group[1].iloc[list(all_i_without_rand_set)]], axis=0)
             else:
-            	df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
+                df_other = pd.concat([df_other, df.iloc[list(all_i_without_rand_set)]], axis=0)
     if other:
         for field in y + by:
             df_other[field] = df_other[field].apply(lambda x: float(x))
@@ -366,7 +419,7 @@ def load_models(path_to_saved_models, df, models_list=None, layer='first',
         models[i] = [model_layers_v, N, nn]
     
     if sort:
-    	models.sort(key=lambda x: list(map(int, x[1].split('.'))))
+        models.sort(key=lambda x: list(map(int, x[1].split('.'))))
     
     return models
 
